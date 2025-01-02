@@ -31,7 +31,7 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     en_pins = [int(pin) for pin in list_enable_pins]
-    pin_en = en_pins[chosen_voa_ix]
+    pin_en = en_pins[0]
     pin_step = int(cfg['common']['step'])
     pin_dir = int(cfg['common']['direction'])
     try:
@@ -40,22 +40,15 @@ if __name__ == "__main__":
         print(f'Configured number of steps should be an integer')
         steps_to_move = 0
 
-    print(f'GPIO pin {pin_en} will be enabled to move VOA{chosen_voa_ix + 1}')
+    print(f'GPIO pin {pin_en} will be enabled')
+#    print(f'GPIO pin {pin_en} will be enabled to move VOA{chosen_voa_ix + 1}')
     time.sleep(2)
 
     # -----------------------------------------------------------------------
     # initiate the TMC_2209 class
     # use your pins for pin_en, pin_step, pin_dir here
     # -----------------------------------------------------------------------
-    if BOARD == Board.RASPBERRY_PI:
-        tmc = TMC_2209(pin_en, pin_step, pin_dir, loglevel=Loglevel.DEBUG)
-    elif BOARD == Board.RASPBERRY_PI5:
-        tmc = TMC_2209(21, 16, 20, serialport="/dev/ttyAMA0", loglevel=Loglevel.DEBUG)
-    elif BOARD == Board.NVIDIA_JETSON:
-        tmc = TMC_2209(22, 6, 5, serialport="/dev/ttyTHS1", loglevel=Loglevel.DEBUG)
-    else:
-        # just in case
-        tmc = TMC_2209(pin_en, pin_step, pin_dir, loglevel=Loglevel.DEBUG)
+    tmc = TMC_2209(en_pins, pin_step, pin_dir, loglevel=Loglevel.DEBUG)
 
     # -----------------------------------------------------------------------
     # set the loglevel of the libary (currently only printed)
