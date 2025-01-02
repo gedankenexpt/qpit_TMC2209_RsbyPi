@@ -31,9 +31,10 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     en_pins = [int(pin) for pin in list_enable_pins]
-    pin_en = en_pins[0]
+    pin_en = en_pins[0]  # hardcoded 
     pin_step = int(cfg['common']['step'])
     pin_dir = int(cfg['common']['direction'])
+    res_microstep = int(cfg['movement']['micro_res'])
     try:
         steps_to_move = int(cfg['movement']['num_steps'])
     except ValueError:
@@ -65,7 +66,7 @@ if __name__ == "__main__":
     tmc.set_current(300)
     tmc.set_interpolation(True)
     tmc.set_spreadcycle(False)  # False will activate Stealthchop
-    tmc.set_microstepping_resolution(2)
+    tmc.set_microstepping_resolution(res_microstep)
     tmc.set_internal_rsense(False)
 
     print("---\n---")
@@ -101,13 +102,13 @@ if __name__ == "__main__":
     resol_microstep_drv_reg = tmc.read_microstepping_resolution()
     resol_microstep_cached = tmc.get_microstepping_resolution()
     accel = tmc.get_acceleration()
-    max_speed = tmc.get_acceleration()
+    max_speed = tmc.get_max_speed()
     print(f'get_direction_reg() = {dir_reg}')
     print(f'get_interpolation() = {interp}')
     print(f'read_microstepping_resolution() = {resol_microstep_drv_reg}')
     print(f'get_microstepping_resolution() = {resol_microstep_cached}')
     print(f'get_acceleration() = {accel}')
-    print(f'get_acceleration() = {max_speed}')
+    print(f'get_max_speed() = {max_speed}')
 
     # -----------------------------------------------------------------------
     # activate the motor current output
@@ -122,8 +123,8 @@ if __name__ == "__main__":
     else:
         for i in range(4):
             print(f'Iteration {i} starting...')
-            tmc.run_to_position_steps(800, MovementAbsRel.RELATIVE)  # move 600 steps forward
-            tmc.run_to_position_steps(-800, MovementAbsRel.RELATIVE)  # move 600 steps backward
+            tmc.run_to_position_steps(12000, MovementAbsRel.RELATIVE)  # move 2400 steps forward
+            tmc.run_to_position_steps(-12000, MovementAbsRel.RELATIVE)  # move 2400 steps backward
             print(f'Iteration {i} finished, waiting for 2 sec')
             time.sleep(2)
 
