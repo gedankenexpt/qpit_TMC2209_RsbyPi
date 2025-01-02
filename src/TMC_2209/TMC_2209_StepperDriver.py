@@ -55,7 +55,7 @@ class TMC_2209:
     )
 
     from ._TMC_2209_test import (
-        test_pin, test_dir_step_en, test_step, test_uart, test_stallguard_threshold
+        test_dir_step_en, test_step, test_uart, test_stallguard_threshold
     )
 
     BOARD = BOARD
@@ -147,7 +147,7 @@ class TMC_2209:
         self.tmc_logger.log(f"EN Pin: {pin_en}", Loglevel.DEBUG)
         if pin_en != -1:
             self._pin_en = pin_en
-            TMC_gpio.gpio_setup(self._pin_en, GpioMode.OUT, initial=Gpio.HIGH)
+            TMC_gpio.gpio_setup(self._pin_en, GpioMode.OUT, initial=Gpio.LOW)
 
         self.tmc_logger.log(f"STEP Pin: {pin_step}", Loglevel.DEBUG)
         if pin_step != -1:
@@ -213,7 +213,7 @@ class TMC_2209:
             en (bool): whether the motor current output should be enabled
         """
         if self._pin_en != -1:
-            TMC_gpio.gpio_output(self._pin_en, not en)
+            TMC_gpio.gpio_output(self._pin_en, en)
             self.tmc_logger.log(f"Motor output active: {en}", Loglevel.INFO)
         else:
             self.tmc_logger.log(f"Motor pin is: {self._pin_en}", Loglevel.INFO)

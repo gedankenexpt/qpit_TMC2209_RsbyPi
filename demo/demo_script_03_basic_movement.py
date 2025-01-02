@@ -28,14 +28,14 @@ print("---")
 # use your pins for pin_en, pin_step, pin_dir here
 #-----------------------------------------------------------------------
 if BOARD == Board.RASPBERRY_PI:
-    tmc = TMC_2209(21, 16, 20, loglevel=Loglevel.DEBUG)
+    tmc = TMC_2209(0, 5, 6, loglevel=Loglevel.DEBUG)
 elif BOARD == Board.RASPBERRY_PI5:
     tmc = TMC_2209(21, 16, 20, serialport="/dev/ttyAMA0", loglevel=Loglevel.DEBUG)
 elif BOARD == Board.NVIDIA_JETSON:
-    tmc = TMC_2209(13, 6, 5, serialport="/dev/ttyTHS1", loglevel=Loglevel.DEBUG)
+    tmc = TMC_2209(22, 6, 5, serialport="/dev/ttyTHS1", loglevel=Loglevel.DEBUG)
 else:
     # just in case
-    tmc = TMC_2209(21, 16, 20, loglevel=Loglevel.DEBUG)
+    tmc = TMC_2209(22, 5, 6, loglevel=Loglevel.DEBUG)
 
 
 
@@ -115,20 +115,23 @@ tmc.set_motor_enabled(True)
 #-----------------------------------------------------------------------
 # move the motor 1 revolution
 #-----------------------------------------------------------------------
-tmc.run_to_position_steps(400)                             #move to position 400
-tmc.run_to_position_steps(0)                               #move to position 0
+for i in range(4):
+    print(f'Iteration {i} starting...')
+    tmc.run_to_position_steps(200)                             #move to position 200
+    tmc.run_to_position_steps(0)                               #move to position 0
 
+    time.sleep(2)
 
-tmc.run_to_position_steps(400, MovementAbsRel.RELATIVE)    #move 400 steps forward
-tmc.run_to_position_steps(-400, MovementAbsRel.RELATIVE)   #move 400 steps backward
+    tmc.run_to_position_steps(600, MovementAbsRel.RELATIVE)    #move 600 steps forward
+    tmc.run_to_position_steps(-600, MovementAbsRel.RELATIVE)   #move 600 steps backward
 
+    time.sleep(2)
 
-tmc.run_to_position_steps(400)                             #move to position 400
-tmc.run_to_position_steps(0)                               #move to position 0
+    tmc.run_to_position_steps(400)                             #move to position 400
+    tmc.run_to_position_steps(0)                               #move to position 0
 
-
-
-
+    print(f'Iteration {i} finished, waiting for 5 sec')
+    time.sleep(5)
 
 #-----------------------------------------------------------------------
 # deactivate the motor current output

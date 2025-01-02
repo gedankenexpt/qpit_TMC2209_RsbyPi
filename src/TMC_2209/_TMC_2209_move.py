@@ -1,9 +1,9 @@
-#pylint: disable=invalid-name
-#pylint: disable=too-many-public-methods
-#pylint: disable=too-many-branches
-#pylint: disable=no-member
-#pylint: disable=protected-access
-#pylint: disable=bare-except
+# pylint: disable=invalid-name
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-branches
+# pylint: disable=no-member
+# pylint: disable=protected-access
+# pylint: disable=bare-except
 """
 TMC_2209 stepper driver communication module
 """
@@ -15,7 +15,6 @@ import threading
 from ._TMC_2209_GPIO_board import TMC_gpio, Gpio
 from ._TMC_2209_logger import Loglevel
 from . import _TMC_2209_math as tmc_math
-
 
 
 class Direction(Enum):
@@ -55,7 +54,6 @@ def set_movement_abs_rel(self, movement_abs_rel):
     self._movement_abs_rel = movement_abs_rel
 
 
-
 def get_current_position(self):
     """returns the current motor position in µsteps
 
@@ -63,7 +61,6 @@ def get_current_position(self):
         int: current motor position
     """
     return self._current_pos
-
 
 
 def set_current_position(self, new_pos):
@@ -103,7 +100,7 @@ def set_speed_fullstep(self, speed):
     Args:
         speed (int): speed in fullsteps/sec
     """
-    self.set_speed(speed*self.get_microstepping_resolution())
+    self.set_speed(speed * self.get_microstepping_resolution())
 
 
 def set_max_speed(self, speed):
@@ -122,9 +119,8 @@ def set_max_speed(self, speed):
             self._cmin = 1000000.0 / speed
         # Recompute _n from current speed and adjust speed if accelerating or cruising
         if self._n > 0:
-            self._n = (self._speed * self._speed) / (2.0 * self._acceleration) # Equation 16
+            self._n = (self._speed * self._speed) / (2.0 * self._acceleration)  # Equation 16
             self.compute_new_speed()
-
 
 
 def set_max_speed_fullstep(self, speed):
@@ -133,8 +129,7 @@ def set_max_speed_fullstep(self, speed):
     Args:
         speed (int): maximum speed in fullsteps/sec
     """
-    self.set_max_speed(speed*self.get_microstepping_resolution())
-
+    self.set_max_speed(speed * self.get_microstepping_resolution())
 
 
 def get_max_speed(self):
@@ -144,7 +139,6 @@ def get_max_speed(self):
         int: current maximum speed in steps/sec
     """
     return self._max_speed
-
 
 
 def set_acceleration(self, acceleration):
@@ -160,10 +154,9 @@ def set_acceleration(self, acceleration):
         # Recompute _n per Equation 17
         self._n = self._n * (self._acceleration / acceleration)
         # New c0 per Equation 7, with correction per Equation 15
-        self._c0 = 0.676 * math.sqrt(2.0 / acceleration) * 1000000.0 # Equation 15
+        self._c0 = 0.676 * math.sqrt(2.0 / acceleration) * 1000000.0  # Equation 15
         self._acceleration = acceleration
         self.compute_new_speed()
-
 
 
 def set_acceleration_fullstep(self, acceleration):
@@ -172,8 +165,7 @@ def set_acceleration_fullstep(self, acceleration):
     Args:
         acceleration (int): acceleration/deceleration in fullsteps per sec per sec
     """
-    self.set_acceleration(acceleration*self.get_microstepping_resolution())
-
+    self.set_acceleration(acceleration * self.get_microstepping_resolution())
 
 
 def get_acceleration(self):
@@ -185,8 +177,7 @@ def get_acceleration(self):
     return self._acceleration
 
 
-
-def stop(self, stop_mode = StopMode.HARDSTOP):
+def stop(self, stop_mode=StopMode.HARDSTOP):
     """stop the current movement
 
     Args:
@@ -194,7 +185,6 @@ def stop(self, stop_mode = StopMode.HARDSTOP):
             (Default value = StopMode.HARDSTOP)
     """
     self._stop = stop_mode
-
 
 
 def get_movement_phase(self):
@@ -206,8 +196,7 @@ def get_movement_phase(self):
     return self._movement_phase
 
 
-
-def run_to_position_steps(self, steps, movement_abs_rel = None):
+def run_to_position_steps(self, steps, movement_abs_rel=None):
     """runs the motor to the given position.
     with acceleration and deceleration
     blocks the code until finished or stopped from a different thread!
@@ -235,7 +224,7 @@ def run_to_position_steps(self, steps, movement_abs_rel = None):
     self._speed = 0.0
     self._n = 0
     self.compute_new_speed()
-    while self.run(): #returns false, when target position is reached
+    while self.run():  # returns false, when target position is reached
         if self._stop == StopMode.HARDSTOP:
             break
 
@@ -243,8 +232,7 @@ def run_to_position_steps(self, steps, movement_abs_rel = None):
     return self._stop
 
 
-
-def run_to_position_revolutions(self, revolutions, movement_abs_rel = None):
+def run_to_position_revolutions(self, revolutions, movement_abs_rel=None):
     """runs the motor to the given position.
     with acceleration and deceleration
     blocks the code until finished!
@@ -257,11 +245,10 @@ def run_to_position_revolutions(self, revolutions, movement_abs_rel = None):
         stop (enum): how the movement was finished
     """
     return self.run_to_position_steps(round(revolutions * self._steps_per_rev),
-                                        movement_abs_rel)
+                                      movement_abs_rel)
 
 
-
-def run_to_position_steps_threaded(self, steps, movement_abs_rel = None):
+def run_to_position_steps_threaded(self, steps, movement_abs_rel=None):
     """runs the motor to the given position.
     with acceleration and deceleration
     does not block the code
@@ -277,12 +264,11 @@ def run_to_position_steps_threaded(self, steps, movement_abs_rel = None):
         stop (enum): how the movement was finished
     """
     self._movement_thread = threading.Thread(target=self.run_to_position_steps,
-                                                args=(steps, movement_abs_rel))
+                                             args=(steps, movement_abs_rel))
     self._movement_thread.start()
 
 
-
-def run_to_position_revolutions_threaded(self, revolutions, movement_abs_rel = None):
+def run_to_position_revolutions_threaded(self, revolutions, movement_abs_rel=None):
     """runs the motor to the given position.
     with acceleration and deceleration
     does not block the code
@@ -296,8 +282,7 @@ def run_to_position_revolutions_threaded(self, revolutions, movement_abs_rel = N
         stop (enum): how the movement was finished
     """
     return self.run_to_position_steps_threaded(round(revolutions * self._steps_per_rev),
-                                                movement_abs_rel)
-
+                                               movement_abs_rel)
 
 
 def wait_for_movement_finished_threaded(self):
@@ -313,23 +298,20 @@ def wait_for_movement_finished_threaded(self):
     return self._stop
 
 
-
 def run(self):
     """calculates a new speed if a speed was made
 
     returns true if the target position is reached
     should not be called from outside!
     """
-    if self.run_speed(): #returns true, when a step is made
+    if self.run_speed():  # returns true, when a step is made
         self.compute_new_speed()
     return self._speed != 0.0 and self.distance_to_go() != 0
-
 
 
 def distance_to_go(self):
     """returns the remaining distance the motor should run"""
     return self._target_pos - self._current_pos
-
 
 
 def compute_new_speed(self):
@@ -340,11 +322,11 @@ def compute_new_speed(self):
     https://www.embedded.com/generate-stepper-motor-speed-profiles-in-real-time/
     https://web.archive.org/web/20140705143928/http://fab.cba.mit.edu/classes/MIT/961.09/projects/i0/Stepper_Motor_Speed_Profile.pdf
     """
-    distance_to = self.distance_to_go() # +ve is clockwise from current location
-    steps_to_stop = (self._speed * self._speed) / (2.0 * self._acceleration) # Equation 16
+    distance_to = self.distance_to_go()  # +ve is clockwise from current location
+    steps_to_stop = (self._speed * self._speed) / (2.0 * self._acceleration)  # Equation 16
     if ((distance_to == 0 and steps_to_stop <= 2) or
-    (self._stop == StopMode.SOFTSTOP and steps_to_stop <= 1)):
-        # We are at the target and its time to stop
+            (self._stop == StopMode.SOFTSTOP and steps_to_stop <= 1)):
+        # We are at the target, and it is time to stop
         self._step_interval = 0
         self._speed = 0.0
         self._n = 0
@@ -358,13 +340,13 @@ def compute_new_speed(self):
         if self._n > 0:
             # Currently accelerating, need to decel now? Or maybe going the wrong way?
             if ((steps_to_stop >= distance_to) or self._direction == Direction.CCW or
-                self._stop == StopMode.SOFTSTOP):
-                self._n = -steps_to_stop # Start deceleration
+                    self._stop == StopMode.SOFTSTOP):
+                self._n = -steps_to_stop  # Start deceleration
                 self._movement_phase = MovementPhase.DECELERATING
         elif self._n < 0:
             # Currently decelerating, need to accel again?
             if (steps_to_stop < distance_to) and self._direction == Direction.CW:
-                self._n = -self._n # Start acceleration
+                self._n = -self._n  # Start acceleration
                 self._movement_phase = MovementPhase.ACCELERATING
     elif distance_to < 0:
         # We are clockwise from the target
@@ -372,13 +354,13 @@ def compute_new_speed(self):
         if self._n > 0:
             # Currently accelerating, need to decel now? Or maybe going the wrong way?
             if (((steps_to_stop >= -distance_to) or self._direction == Direction.CW or
-                self._stop == StopMode.SOFTSTOP)):
-                self._n = -steps_to_stop # Start deceleration
+                 self._stop == StopMode.SOFTSTOP)):
+                self._n = -steps_to_stop  # Start deceleration
                 self._movement_phase = MovementPhase.DECELERATING
         elif self._n < 0:
             # Currently decelerating, need to accel again?
             if (steps_to_stop < -distance_to) and self._direction == Direction.CCW:
-                self._n = -self._n # Start acceleration
+                self._n = -self._n  # Start acceleration
                 self._movement_phase = MovementPhase.ACCELERATING
     # Need to accelerate or decelerate
     if self._n == 0:
@@ -394,7 +376,7 @@ def compute_new_speed(self):
         self._movement_phase = MovementPhase.ACCELERATING
     else:
         # Subsequent step. Works for accel (n is +_ve) and decel (n is -ve).
-        self._cn = self._cn - ((2.0 * self._cn) / ((4.0 * self._n) + 1)) # Equation 13
+        self._cn = self._cn - ((2.0 * self._cn) / ((4.0 * self._n) + 1))  # Equation 13
         self._cn = max(self._cn, self._cmin)
         if self._cn == self._cmin:
             self._movement_phase = MovementPhase.MAXSPEED
@@ -405,27 +387,25 @@ def compute_new_speed(self):
         self._speed = -self._speed
 
 
-
 def run_speed(self):
     """this methods does the actual steps with the current speed"""
     # Don't do anything unless we actually have a step interval
     if not self._step_interval:
         return False
 
-    curtime = time.time_ns()/1000
+    curtime = time.time_ns() / 1000
 
     if curtime - self._last_step_time >= self._step_interval:
 
-        if self._direction == 1: # Clockwise
+        if self._direction == 1:  # Clockwise
             self._current_pos += 1
-        else: # Anticlockwise
+        else:  # Anticlockwise
             self._current_pos -= 1
         self.make_a_step()
 
-        self._last_step_time = curtime # Caution: does not account for costs in step()
+        self._last_step_time = curtime  # Caution: does not account for costs in step()
         return True
     return False
-
 
 
 def make_a_step(self):
@@ -434,8 +414,8 @@ def make_a_step(self):
     for the TMC2209 there needs to be a signal duration of minimum 100 ns
     """
     TMC_gpio.gpio_output(self._pin_step, Gpio.HIGH)
-    time.sleep(1/1000/1000)
+    time.sleep(1 / 1000 / 1000)
     TMC_gpio.gpio_output(self._pin_step, Gpio.LOW)
-    time.sleep(1/1000/1000)
+    time.sleep(1 / 1000 / 1000)
 
     self.tmc_logger.log("one step", Loglevel.MOVEMENT)
