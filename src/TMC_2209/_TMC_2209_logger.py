@@ -66,6 +66,9 @@ class TMC_logger:
 
         self.logger.propagate = True
 
+    def __del__(self):
+        self.remove_all_handlers()
+
     def set_logprefix(self, logprefix: str):
         """set the logprefix.
 

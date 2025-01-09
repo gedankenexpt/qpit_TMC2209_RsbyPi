@@ -1,9 +1,9 @@
-#pylint: disable=invalid-name
-#pylint: disable=too-many-public-methods
-#pylint: disable=too-many-branches
-#pylint: disable=protected-access
-#pylint: disable=no-member
-#pylint: disable=bare-except
+# pylint: disable=invalid-name
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-branches
+# pylint: disable=protected-access
+# pylint: disable=no-member
+# pylint: disable=bare-except
 """
 TMC_2209 stepper driver communication module
 """
@@ -15,6 +15,31 @@ from ._TMC_2209_move import MovementAbsRel, MovementPhase
 from . import _TMC_2209_reg as tmc_reg
 
 
+def test_pin(self, pin, ioin_reg):
+    """tests one pin
+
+    this function checks the connection to a pin
+    by toggling it and reading the IOIN register
+    """
+    pin_ok = True
+
+    TMC_gpio.gpio_output(self._pin_dir, Gpio.HIGH)
+    TMC_gpio.gpio_output(self._pin_step, Gpio.HIGH)
+    TMC_gpio.gpio_output(self._pin_en, Gpio.HIGH)
+
+    ioin = self.read_ioin()
+    if not ioin & ioin_reg:
+        pin_ok = False
+
+    TMC_gpio.gpio_output(pin, Gpio.LOW)
+    time.sleep(0.1)
+
+    ioin = self.read_ioin()
+    if ioin & ioin_reg:
+        pin_ok = False
+
+    return pin_ok
+
 
 def test_dir_step_en(self):
     """tests the EN, DIR and STEP pin
@@ -22,43 +47,9 @@ def test_dir_step_en(self):
     this sets the EN, DIR and STEP pin to HIGH, LOW and HIGH
     and checks the IOIN Register of the TMC meanwhile
     """
-    pin_dir_ok = pin_step_ok = pin_en_ok = True
-
-    TMC_gpio.gpio_output(self._pin_step, Gpio.HIGH)
-    TMC_gpio.gpio_output(self._pin_dir, Gpio.HIGH)
-    TMC_gpio.gpio_output(self._pin_en, Gpio.HIGH)
-    time.sleep(0.1)
-    ioin = self.read_ioin()
-    if not ioin & tmc_reg.io_dir:
-        pin_dir_ok = False
-    if not ioin & tmc_reg.io_step:
-        pin_step_ok = False
-    if not ioin & tmc_reg.io_enn:
-        pin_en_ok = False
-
-    TMC_gpio.gpio_output(self._pin_step, Gpio.LOW)
-    TMC_gpio.gpio_output(self._pin_dir, Gpio.LOW)
-    TMC_gpio.gpio_output(self._pin_en, Gpio.LOW)
-    time.sleep(0.1)
-    ioin = self.read_ioin()
-    if ioin & tmc_reg.io_dir:
-        pin_dir_ok = False
-    if ioin & tmc_reg.io_step:
-        pin_step_ok = False
-    if ioin & tmc_reg.io_enn:
-        pin_en_ok = False
-
-    TMC_gpio.gpio_output(self._pin_step, Gpio.HIGH)
-    TMC_gpio.gpio_output(self._pin_dir, Gpio.HIGH)
-    TMC_gpio.gpio_output(self._pin_en, Gpio.HIGH)
-    time.sleep(0.1)
-    ioin = self.read_ioin()
-    if not ioin & tmc_reg.io_dir:
-        pin_dir_ok = False
-    if not ioin & tmc_reg.io_step:
-        pin_step_ok = False
-    if not ioin & tmc_reg.io_enn:
-        pin_en_ok = False
+    pin_dir_ok = self.test_pin(self._pin_dir, tmc_reg.io_dir)
+    pin_step_ok = self.test_pin(self._pin_step, tmc_reg.io_step)
+    pin_en_ok = self.test_pin(self._pin_en, tmc_reg.io_enn)
 
     self.set_motor_enabled(False)
 
@@ -78,7 +69,6 @@ def test_dir_step_en(self):
     self.tmc_logger.log("---")
 
 
-
 def test_step(self):
     """test method"""
     self.set_direction_pin(1)
@@ -89,7 +79,6 @@ def test_step(self):
         time.sleep(0.001)
         TMC_gpio.gpio_output(self._pin_step, Gpio.LOW)
         time.sleep(0.01)
-
 
 
 def test_uart(self):
@@ -106,7 +95,6 @@ def test_uart(self):
     self.tmc_logger.log(f"length snd: {len(snd)}", Loglevel.DEBUG)
     self.tmc_logger.log(f"length rtn: {len(rtn)}", Loglevel.DEBUG)
 
-
     self.tmc_logger.log("complete messages:", Loglevel.DEBUG)
     self.tmc_logger.log(str(snd.hex()), Loglevel.DEBUG)
     self.tmc_logger.log(str(rtn.hex()), Loglevel.DEBUG)
@@ -115,14 +103,14 @@ def test_uart(self):
     self.tmc_logger.log(str(snd[0:4].hex()), Loglevel.DEBUG)
     self.tmc_logger.log(str(rtn[0:4].hex()), Loglevel.DEBUG)
 
-    if len(rtn)==12:
+    if len(rtn) == 12:
         self.tmc_logger.log("""the Raspberry Pi received the sent
                             bits and the answer from the TMC""", Loglevel.DEBUG)
-    elif len(rtn)==4:
+    elif len(rtn) == 4:
         self.tmc_logger.log("the Raspberry Pi received only the sent bits",
                             Loglevel.ERROR)
         status = False
-    elif len(rtn)==0:
+    elif len(rtn) == 0:
         self.tmc_logger.log("the Raspberry Pi did not receive anything",
                             Loglevel.ERROR)
         status = False
@@ -146,8 +134,7 @@ def test_uart(self):
         self.tmc_logger.log("UART connection: not OK", Loglevel.ERROR)
 
     self.tmc_logger.log("---")
-    return True
-
+    return status
 
 
 def test_stallguard_threshold(self, steps):
@@ -171,21 +158,20 @@ def test_stallguard_threshold(self, steps):
 
     self.run_to_position_steps_threaded(steps, MovementAbsRel.RELATIVE)
 
-
     while self._movement_phase != MovementPhase.STANDSTILL:
         stallguard_result = self.get_stallguard_result()
 
         self.tmc_logger.log(f"{self._movement_phase} | {stallguard_result}",
-                    Loglevel.INFO)
+                            Loglevel.INFO)
 
         if (self._movement_phase == MovementPhase.ACCELERATING and
-            stallguard_result < min_stallguard_result_accel):
+                stallguard_result < min_stallguard_result_accel):
             min_stallguard_result_accel = stallguard_result
         if (self._movement_phase == MovementPhase.MAXSPEED and
-            stallguard_result < min_stallguard_result_maxspeed):
+                stallguard_result < min_stallguard_result_maxspeed):
             min_stallguard_result_maxspeed = stallguard_result
         if (self._movement_phase == MovementPhase.DECELERATING and
-            stallguard_result < min_stallguard_result_decel):
+                stallguard_result < min_stallguard_result_decel):
             min_stallguard_result_decel = stallguard_result
 
     self.wait_for_movement_finished_threaded()
@@ -194,7 +180,7 @@ def test_stallguard_threshold(self, steps):
     self.tmc_logger.log(f"min StallGuard result during accel: {min_stallguard_result_accel}",
                         Loglevel.INFO)
     self.tmc_logger.log(f"min StallGuard result during maxspeed: {min_stallguard_result_maxspeed}",
-    Loglevel.INFO)
+                        Loglevel.INFO)
     self.tmc_logger.log(f"min StallGuard result during decel: {min_stallguard_result_decel}",
                         Loglevel.INFO)
     self.tmc_logger.log("---", Loglevel.INFO)
