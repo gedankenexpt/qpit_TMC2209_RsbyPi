@@ -114,7 +114,7 @@ class TMC_2209:
         """constructor
 
         Args:
-            pin_en (int): EN pin number
+            pin_en (int): EN pin number(s)
             pin_step (int, optional): STEP pin number. Defaults to -1.
             pin_dir (int, optional): DIR pin number. Defaults to -1.
             baudrate (int, optional): baudrate. Defaults to 115200.
@@ -147,7 +147,7 @@ class TMC_2209:
                 del pin_en
                 for pin in pin_en_list:
                     TMC_gpio.gpio_setup(pin, GpioMode.OUT, initial=Gpio.LOW)
-                pin_en = pin_en_list[0]  # make the first in the list as the pin we are gonna use
+                pin_en = pin_en_list[0]  # the first in the list corresponds to the motor we intend to move
             else:
                 self.tmc_logger.log("Single pin supplied for EN", Loglevel.INFO)
 

@@ -7,7 +7,7 @@ test file for testing basic movement
 """
 
 import configparser
-import argparse
+import numpy as np
 import sys
 import time
 
@@ -18,12 +18,26 @@ except ModuleNotFoundError:
     from TMC_2209.TMC_2209_StepperDriver import *
     from TMC_2209._TMC_2209_GPIO_board import Board
 
+
+"""
+------------------------------------------------------
+VOA   pin_Rpi   GPIO   enable   UARTaddr
+------------------------------------------------------
+ 1    28         1       EN4    3
+ 2    15        22       EN2    2
+ 3    27         0       EN3    0
+ 4     7         4       EN1    1
+------------------------------------------------------
+
+"""
+
 if __name__ == "__main__":
 
     # get stuff through the config file
     cfg = configparser.ConfigParser(comment_prefixes='#', inline_comment_prefixes='#')
     cfg.read('basic_movement.conf')
     list_enable_pins = cfg['voa']['enables'].split(',')
+    list_uart_addrs = cfg['voa']['addresses'].split(',')
 
     chosen_voa_ix = int(cfg['voa']['id']) - 1  # -1 so that index starts from 0
     if len(list_enable_pins) != 4 or chosen_voa_ix > 3 or chosen_voa_ix < 0:
@@ -31,7 +45,10 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     en_pins = [int(pin) for pin in list_enable_pins]
-    pin_en = en_pins[0]  # hardcoded 
+    en_pins_tmp = np.roll(en_pins, -chosen_voa_ix)
+    en_pins_rolled = [int(pin) for pin in en_pins_tmp]  # convert back to int
+    pin_en = en_pins_rolled[0]  # GPIO pin for the chosen one!
+    drvr_addr = int(np.roll(list_uart_addrs, -chosen_voa_ix)[0])  # UART driver address of the chosen one!
     pin_step = int(cfg['common']['step'])
     pin_dir = int(cfg['common']['direction'])
     res_microstep = int(cfg['movement']['micro_res'])
@@ -41,7 +58,7 @@ if __name__ == "__main__":
         print(f'Configured number of steps should be an integer')
         steps_to_move = 0
 
-    print(f'GPIO pin {pin_en} will be enabled')
+    print(f'GPIO pin {pin_en} should get enabled')
 #    print(f'GPIO pin {pin_en} will be enabled to move VOA{chosen_voa_ix + 1}')
     time.sleep(2)
 
@@ -49,7 +66,7 @@ if __name__ == "__main__":
     # initiate the TMC_2209 class
     # use your pins for pin_en, pin_step, pin_dir here
     # -----------------------------------------------------------------------
-    tmc = TMC_2209(en_pins, pin_step, pin_dir, loglevel=Loglevel.DEBUG)
+    tmc = TMC_2209(en_pins_rolled, pin_step, pin_dir, driver_address=drvr_addr, loglevel=Loglevel.DEBUG)
 
     # -----------------------------------------------------------------------
     # set the loglevel of the libary (currently only printed)
