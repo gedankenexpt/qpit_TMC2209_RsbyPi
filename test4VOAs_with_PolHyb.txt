@@ -1,0 +1,198 @@
+
+
+********************* 2025.02.05 *********************
+
+Index signals IND assignment: 
+-----------------------
+IND   pin_Rpi   GPIO   
+-----------------------
+ 1    16         23    
+ 2    18         24    
+ 3    11         17    
+ 4    13         27    
+
+
+********************* 2025.01.09 *********************
+
+checked for VOA 1,2,3,4: 
+End to end movement with microstep_resolution = 4 and 9000 steps
+End to end movement with microstep_resolution = 8 and 12000 steps
+
+Multiple responses when the VOAs were maniupated in a loop (over different microstep_resolution values) was probably because of a logging issue, namely that the logger handles were not being removed during de-init. 
+
+
+------------------------------------------------------
+VOA   pin_Rpi   GPIO   enable   UARTaddr
+------------------------------------------------------
+ 1    28         1       EN4    3
+ 2    15        22       EN2    2
+ 3    27         0       EN3    0
+ 4     7         4       EN1    1
+
+
+Aleksander is repairing the two VOA where we have address mismatch 
+
+For setting addr = 1, 
+MS2 : GND, MS1: VCC  
+
+********************* 2025.01.08 *********************
+Checking how MS1 and MS2 pins on the TMC2209 are actually connected: 
+
+MS1 -- pin 09 -- if present, upper resistor
+MS2 -- pin 10 -- if present, lower resistor
+
+
+* VOA1
+MS2, MS1 
+VCC, GND
+UART address = 2 (mismatch)
+
+* VOA2 
+MS2, MS1 
+VCC, GND
+UART address = 2 (match)
+
+* VOA3
+MS2, MS1 
+GND, GND
+UART address = 0 (match)
+
+* VOA4 
+MS2, MS1 
+VCC, VCC
+UART address = 3 (mismatch)
+
+
+********************* 2025.01.06 *********************
+
+Use balanced_receiver_voa.cfg as the config file for qudi 
+uri:  'cdcacm://0483/5740/2061304E5246'
+
+* No optical input 
+Chan 1 (blue): 25675 +/- 30
+Chan 2 (orange): 25725 +/- 30
+
+
+- driver_address=1 does not respond at all, i.e., gives a UART error regardless of whatever we attempt. 
+- driver_address=0 seems to work for both VOA3 and VOA4, i.e., it does not throw UART error but we get responses from both. 
+- driver_address=2 seems to work for VOA2 
+- driver_address=3 seems to work for VOA1
+- Using driver_address=0 on VOA3 makes it work in the same way as VOA1 and VOA2 above (for a given microstep_resolution). VOA4 however is much slower, indicating that it has a different microstep_resolution. 
+- Using driver_address=2 for VOA1 (instead of VOA2, as above) also works but the motor moves slowly, i.e., it probably has a different microstep_resolution. 
+
+
+I would therefore conclude that there is something wrong with the TMC2209 driver of VOA4  
+
+# VOA 1
+tmc1 = TMC_2209([4], 5, 6, driver_address=3)
+# VOA 2
+tmc2 = TMC_2209([22], 5, 6, driver_address=2)
+# VOA 3
+tmc3 = TMC_2209([0], 5, 6, driver_address=0)
+
+
+********************* 2025.01.03 *********************
+
+Changed code in basic_movement script to include UART addresses as well during initialization of the TMC object. To be tested on 6th Jan. 
+
+********************* 2025.01.02 *********************
+
+
+* GPIO4 / EN1 
+Increasing the microstep_resolution from 2 to 128 (in powers of 2) increases the rotation speed considerably. But the linear range of 12000 does not seem to get covered.  
+* GPIO0 / EN3 
+At microstep_resolution = 2, motor covers the linear range of 12000 easily (makes the jarring sound on both ends) and the rotation speed is good. 
+At microstep_resolution = 64 or 128, motor covers only a fraction of the above and the speed is also slower 
+* GPIO1 / EN4
+Similar behaviour to GPIO4, i.e., increasing the microstep_resolution from 2 to 128 (in powers of 2) increases the rotation speed considerably. The  motor covers a good bit of the linear range in all cases. 
+* GPIO22 / EN2
+At microstep_resolution = 64 or 128, the speed is okay but the coverage of the linear range is rather small 
+With decreasing microstep_resolution from 8 to 4 to 2, the speed becomes slower; the coverage of the linear range continues to be rather small 
+
+
+* Checking step pin output on scope 
+- enable pin: 1 (EN4), 0 (EN3)
+With microstep_resolution = 2, step_pin output is 60 us wide pulse train with a period of 2000 us. 
+With microstep_resolution = 16, step_pin output is 60 us wide pulse train with a period of 250 us. 
+
+* Checking how cleanly is the UART configuration implemented by the Python program by comparing the instructions provided in TMC_2209 Driver Datasheet
+- Sec 3.4 suggests to disable configuration pin; this is seemingly done by set_pdn_disable()
+- The function set_mstep_resolution_reg_select() called within set_microstepping_resolution() seems to also enable the MSTEP register 
+
+********************* 2024.12.20 *********************
+
+Abe to run all 4 motors now, but as Aleksander also noticed, there is a massive difference in the range covered by these 4 motors even though the underlying input steps are always the same. Final code from Rpi copied back onto the workstation. 
+
+* Checking output signals on various pins using probe and oscope
+
+The STEP and DIR pins seem to get asserted as expected. Only the enable pin remains low. 
+Need to exceute as 
+python3 -m demo.basic_movement 
+and only then it takes the changes made to the Python scripts into account
+
+The overall range the 4 motors cover are very different even though the input microsteps are the same for all 
+
+********************* 2024.12.19 *********************
+Aleksander changed the logic of the EN pin so it needs to be now asserted to be HIGH to enable the motor to run 
+* Initialization: 
+In TMC_2209_StepperDriver.py
+
+< TMC_gpio.gpio_setup(self._pin_en, GpioMode.OUT, initial=Gpio.HIGH)
+> TMC_gpio.gpio_setup(self._pin_en, GpioMode.OUT, initial=Gpio.LOW)
+
+Inside the function set_motor_enabled() in TMC_2209_StepperDriver.py: 
+< TMC_gpio.gpio_output(self._pin_en, not en)
+> TMC_gpio.gpio_output(self._pin_en, en)
+
+********************* 2024.12.18 *********************
+---------------------------
+pin_Rpi   GPIO   enable_VOA
+---------------------------
+28         1       EN4
+27         0       EN3
+15         22      EN2
+ 7         4       EN1
+29		   5       STEP
+31		   6       DIR
+
+Tried running the motors with the above settings. Only VOA3 worked as expected. VOA1 is currently out anyway. For VOA2, one could see the shaft rotating a bit while for VOA4, no movement could be detected. 
+
+********************* 2024.12.13 *********************
+- Took the single motor (connected to Jetson) to check interaction with Rpi
+- Ran demo_script_03_basic_movement.py with pin_step, pin_dir as GPIO5, GPIO6 and pin_en as 
+GPIO22, GPIO27, 
+- Also checked that the physical “Reserved” pins 27 and 28 (GPIO0 and GPIO1, respectively) seem to be working fine for controlling the motor 
+
+********************* 2024.12.06 *********************
+
+- Trying to run demo_script_01_uart_connection.py with changed pins based on the info below does not seem to move the motor. It also seems to select the wrong motor: Trying to enable EN2 does nothing with VOA2 but some action does happen in VOA1. 
+
+- Troubleshooted Serial and UART communication issues by activating the serial interface on RPi and providing 10V to the driver (current limit of 3 A for all 4 motor drivers suffices)
+
+- STEP needs to be changed from GPIO16 (pin 36) to GPIO5 (pin 29)
+- DIR needs to be changed from GPIO20 (pin 38) to GPIO6 (pin 31)
+- EN needs to be updated from GPIO21 (pin 40) to one of GPIO4 / EN1 (pin 7), GPIO22 / EN2 (pin 15), Reserved / EN3 (pin 27) or EN4 (pin 28)
+
+* Raspberry Pi connection issues: 
+- Using the wireless IP 10.196.163.138 while having own laptop connected to wired DTU network made it eventually work 
+- When using putty, RPi does not seem to like when the login name is sent while ssh-ing into it. So keep that empty. 
+- sftp (using WinSCP) allows updating code files easily.
+
+
+********************* 2024.12.05 *********************
+Use
+uri:  'cdcacm://0483/5740/2061304E5246'  # dual PD
+
+* No optical input 
+Chan 1 (blue): 25710 +/- 30
+Chan 2 (orange): 25710 +/- 30
+
+* With low optical input 
+and with 
+- Port 3 loose, Port 1 tight 
+and
+- Port 2 loose, Port 4 tight 
+
+Chan 1(blue):   28990 +/- 100
+Chan 2(orange): 28990 +/- 100 
+
