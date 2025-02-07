@@ -1,6 +1,21 @@
 
 
 ********************* 2025.02.05 *********************
+* Compared the arduino output on oscope versus the Rpi 
+- Found that the step waveforms are 50% duty cycle in the former but a much smaller duty cycle in the latter
+- Overall voltage levels are also lower (FIXED! : 12V supply was not switched on)
+
+#   acceleration	max_speed	pulse_width		
+1	1000			250			70 us
+2	1000			500			70 us
+3	2000			250			70 us
+4	500				250			70 us
+
+- Tried changing the duty cycle in the  make_a_step() function inside TMC_2209_move.py but that also did not make any difference 
+	period with time.sleep(1 / 1000 / 1000) : 4 ms
+	period with time.sleep(1 / 1000 / 100)  : 4 ms
+
+********************* 2025.02.05 *********************
 
 Index signals IND assignment: 
 -----------------------
@@ -28,6 +43,7 @@ VOA   pin_Rpi   GPIO   enable   UARTaddr
  2    15        22       EN2    2
  3    27         0       EN3    0
  4     7         4       EN1    1
+------------------------------------------------------
 
 
 Aleksander is repairing the two VOA where we have address mismatch 
