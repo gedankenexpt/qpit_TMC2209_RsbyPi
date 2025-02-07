@@ -68,14 +68,17 @@ def run_motor_direct(step_pin, dir_pin, en_pin, lin_range=0):
             GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.LOW)  # set enable pin low
             time.sleep(1.2)
     else:
-        print(f'Moving by {lin_range} steps')
+
         GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set enable pin high
+        print(f'Moving by {lin_range} steps')
         if lin_range > 0:
+            print(f'Going the +ve way')
             GPIO.setup(dir_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set dir pin high
         else:
+            print(f'Going the -ve way')
             GPIO.setup(dir_pin, GpioMode.OUT, initial=Gpio.LOW)  # set dir pin low
         time.sleep(0.1)
-        make_steps(step_pin, int(lin_range))
+        make_steps(step_pin, int(abs(lin_range)))
         print(f'Setting enable pin to low, waiting for 1 sec')
         GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.LOW)  # set enable pin low
 
