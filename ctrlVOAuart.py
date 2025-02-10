@@ -3,11 +3,13 @@ import RPi.GPIO as GPIO
 import time
 import configparser
 
+
 # required to do in the beginning to ensure the motors are not drawing too much current
 def assert_ENpins_low(pin_en_list):
     GPIO.setmode(GPIO.BCM)
     for pin in pin_en_list:
-            GPIO.setup(pin, int(GpioMode.OUT), initial=int(Gpio.LOW))
+        GPIO.setup(pin, int(GpioMode.OUT), initial=int(Gpio.LOW))
+
 
 def set_motor(tmc, res_mstep):
     tmc.set_direction_reg(False)
@@ -19,15 +21,16 @@ def set_motor(tmc, res_mstep):
     tmc.set_acceleration_fullstep(1000)
     tmc.set_max_speed_fullstep(250)
 
+
 def run_motor(tmc, lin_range=0):
     tmc.set_motor_enabled(True)
     if lin_range == 0:
         ni = 3
         for i in range(ni):
-            print(f'Iteration {i+1} of {ni} starting...')
+            print(f'Iteration {i + 1} of {ni} starting...')
             tmc.run_to_position_steps(9000, MovementAbsRel.RELATIVE)
             tmc.run_to_position_steps(-9000, MovementAbsRel.RELATIVE)
-            print(f'Iteration {i+1} of {ni} finished, waiting for 1 sec')
+            print(f'Iteration {i + 1} of {ni} finished, waiting for 1 sec')
             time.sleep(1)
     else:
         print(f'Moving by {lin_range} steps')
