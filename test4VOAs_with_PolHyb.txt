@@ -1,5 +1,10 @@
 
 
+********************* 2025.02.07 *********************
+Index signal is essentially 4 pulses per 360 deg rotation (around 350 ms period and duty cycle of 50%). When the motor comes to an end, this pulsed signal ceases. 
+There is a lot of noise so may have to do some software debouncing (?) or filtering (?)
+
+
 ********************* 2025.02.05 *********************
 * Compared the arduino output on oscope versus the Rpi 
 - Found that the step waveforms are 50% duty cycle in the former but a much smaller duty cycle in the latter
