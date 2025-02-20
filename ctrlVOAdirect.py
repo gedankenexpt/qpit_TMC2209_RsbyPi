@@ -9,10 +9,12 @@ class Gpio(IntEnum):
     LOW = 0
     HIGH = 1
 
+
 class GpioMode(IntEnum):
     """GPIO mode"""
     OUT = 0
     IN = 1
+
 
 # required to do in the beginning to ensure the motors are not drawing too much current
 def assert_ENpins_low(pin_en_list):
@@ -49,10 +51,15 @@ def make_steps(step_pin, num_steps):
         time.sleep(off_time)
 
 
+def shutdown():
+    print('Cleaning up GPIO: This will make all ports as INP')
+    GPIO.cleanup()
+
+
 def run_motor_direct(step_pin, dir_pin, en_pin, lin_range=0):
     if lin_range == 0:
         fixed_loop_steps = 40000
-        ni = 3
+        ni = 2
         for i in range(ni):
             print(f'Iteration {i + 1} of {ni} starting...')
             GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set enable pin high
@@ -68,7 +75,6 @@ def run_motor_direct(step_pin, dir_pin, en_pin, lin_range=0):
             GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.LOW)  # set enable pin low
             time.sleep(1.2)
     else:
-
         GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set enable pin high
         print(f'Moving by {lin_range} steps')
         if lin_range > 0:
@@ -98,7 +104,7 @@ if __name__ == "__main__":
     print(f'Setting all IND pins to be input')
     make_INDpins_inp(ind_pins_all)
     time.sleep(1)
-    
+
     pin_en = int(list_enable_pins[chosen_voa_ix])  # GPIO pin for the chosen one!
     pin_step = int(cfg['common']['step'])
     pin_dir = int(cfg['common']['direction'])
@@ -111,7 +117,12 @@ if __name__ == "__main__":
         print(f'Configured number of steps should be an integer')
         steps_to_move = 0
 
-    run_motor_direct(pin_step, pin_dir, pin_en, steps_to_move)
+    try:
+        run_motor_direct(pin_step, pin_dir, pin_en, steps_to_move)
+    except:
+        print(f'Encountered some error. Closing down.')
+    finally:
+        shutdown()
 
     print("---")
     print("SCRIPT FINISHED")
