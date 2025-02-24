@@ -4,24 +4,12 @@ from enum import Enum, IntEnum
 import configparser
 
 
-class Gpio(IntEnum):
-    """GPIO value"""
-    LOW = 0
-    HIGH = 1
-
-
-class GpioMode(IntEnum):
-    """GPIO mode"""
-    OUT = 0
-    IN = 1
-
-
 # required to do in the beginning to ensure the motors are not drawing too much current
 def assert_ENpins_low(pin_en_list):
     GPIO.setmode(GPIO.BCM)
     for pin in pin_en_list:
         try:
-            GPIO.setup(pin, int(GpioMode.OUT), initial=int(Gpio.LOW))
+            GPIO.setup(pin, int(GPIO.OUT), initial=int(GPIO.LOW))
         except RuntimeWarning:
             print(f'RuntimeWarning came from pin {pin}')
 
@@ -29,13 +17,13 @@ def assert_ENpins_low(pin_en_list):
 def make_INDpins_inp(pin_ind_list):
     GPIO.setmode(GPIO.BCM)
     for pin in pin_ind_list:
-        GPIO.setup(pin, int(GpioMode.IN))
+        GPIO.setup(pin, int(GPIO.IN))
 
 
 def make_stepNdir_output(step_pin, dir_pin):
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(step_pin, int(GpioMode.OUT))
-    GPIO.setup(dir_pin, int(GpioMode.OUT))
+    GPIO.setup(step_pin, int(GPIO.OUT))
+    GPIO.setup(dir_pin, int(GPIO.OUT))
 
 
 def make_steps(step_pin, num_steps):
@@ -45,9 +33,9 @@ def make_steps(step_pin, num_steps):
     on_time = 100 * 1e-6
     off_time = 100 * 1e-6
     for j in range(num_steps):
-        GPIO.output(step_pin, Gpio.HIGH)
+        GPIO.output(step_pin, GPIO.HIGH)
         time.sleep(on_time)
-        GPIO.output(step_pin, Gpio.LOW)
+        GPIO.output(step_pin, GPIO.LOW)
         time.sleep(off_time)
 
 
@@ -62,31 +50,31 @@ def run_motor_direct(step_pin, dir_pin, en_pin, lin_range=0):
         ni = 2
         for i in range(ni):
             print(f'Iteration {i + 1} of {ni} starting...')
-            GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set enable pin high
-            GPIO.setup(dir_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set dir pin high
+            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
+            GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.HIGH)  # set dir pin high
             make_steps(step_pin, fixed_loop_steps)  # make steps
             print(f'Setting enable pin to low, waiting for 2 sec, and changing direction')
-            GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.LOW)  # set enable pin low
+            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.LOW)  # set enable pin low
             time.sleep(0.5)
-            GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set enable pin high
-            GPIO.setup(dir_pin, GpioMode.OUT, initial=Gpio.LOW)  # set dir pin high
+            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
+            GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.LOW)  # set dir pin high
             make_steps(step_pin, fixed_loop_steps)  # make steps again (in opposite direction)
             print(f'Iteration {i + 1} of {ni} finished; setting enable pin low')
-            GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.LOW)  # set enable pin low
+            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.LOW)  # set enable pin low
             time.sleep(1.2)
     else:
-        GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set enable pin high
+        GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
         print(f'Moving by {lin_range} steps')
         if lin_range > 0:
             print(f'Going the +ve way')
-            GPIO.setup(dir_pin, GpioMode.OUT, initial=Gpio.HIGH)  # set dir pin high
+            GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.HIGH)  # set dir pin high
         else:
             print(f'Going the -ve way')
-            GPIO.setup(dir_pin, GpioMode.OUT, initial=Gpio.LOW)  # set dir pin low
+            GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.LOW)  # set dir pin low
         time.sleep(0.1)
         make_steps(step_pin, int(abs(lin_range)))
         print(f'Setting enable pin to low, waiting for 1 sec')
-        GPIO.setup(en_pin, GpioMode.OUT, initial=Gpio.LOW)  # set enable pin low
+        GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.LOW)  # set enable pin low
 
 
 if __name__ == "__main__":

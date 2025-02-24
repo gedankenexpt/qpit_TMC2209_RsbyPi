@@ -1,4 +1,23 @@
 
+********************* 2025.02.21 *********************
+
+Optical LO power changed
+
+mW:      0 |   5.7 |   7.2
+CH1: 25665 | 25525 | 25000
+CH2: 25715 | 28245 | 29250
+
+Find max shift through attinuator:
+
+
+CH2:  24930 -> 
+
+
+
+id = 1 moves 4
+id = 2 moves 2
+id = 3 moves 3
+id = 4 moves 1
 
 ********************* 2025.02.05 *********************
 * Compared the arduino output on oscope versus the Rpi 
