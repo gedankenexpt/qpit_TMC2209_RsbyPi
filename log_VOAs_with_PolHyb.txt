@@ -1,4 +1,12 @@
 
+
+********************* 2025.02.26 *********************
+
+Raspberry Pi new password:  
+Ljhvc235uyhhh1YYYYY1
+
+Aleksander re-did the circuit board and the index signals on the scope look much better. He believes there might be still some noise during the transition in the pulses but this should hopefully be addressable in software. 
+
 ********************* 2025.02.21 *********************
 
 Optical LO power changed
