@@ -4,6 +4,7 @@ import os
 import numpy as np
 import configparser
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 # required to do in the beginning to ensure the motors are not drawing too much current
@@ -63,6 +64,28 @@ def make_steps_and_read(step_pin, num_steps, pin_ind_list, fpath=''):
         df.to_csv(fpath, index=False)
     else:
         print("Index signal output will not be dumped into file")
+
+
+def plot_INDpin_values(ni, datadir, pin_ind_list):
+    # fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(nrows=ni, ncols=1, figsize=(10, 6))
+    for i in range(ni):
+        print(f'Plotting from iteration {i + 1} of {ni}')
+        fpath_csv1 = os.path.join(datadir, 'CW' + str(i + 1) + '.csv')
+        fpath_csv2 = os.path.join(datadir, 'CCW' + str(i + 1) + '.csv')
+        df1 = pd.read_csv(fpath_csv1)
+        df2 = pd.read_csv(fpath_csv2)
+        for ix, pin in enumerate(pin_ind_list):
+            ax[i].plot(np.concatenate((df1[pin], df2[pin])),
+                       label='IND' + str(ix + 1) + '(GPIO ' + pin + ')_run' + str(i + 1))
+            # ax[i].plot(df1[pin] + 1, label='CW' + pin + '(upper)')
+            # col = ax[i].get_lines()[-1].get_color()
+            # ax[i].plot(df2[pin] - 1, col, label='CCW' + pin + '(lower)')
+        ax[i].legend(fontsize=12)
+        ax[i].set_yticks([0, 1])
+    ax[0].set_title(f'Data from {os.path.split(datadir)[1]}')
+
+    return fig, ax
 
 
 # def read_INDpins(pin_ind_list, num_vals, fname=''):
