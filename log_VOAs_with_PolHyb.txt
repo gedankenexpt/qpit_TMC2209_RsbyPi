@@ -1,4 +1,29 @@
 
+********************* 2025.02.28 *********************
+
+* Discussed the possibility of increasing the elliptical disks' thickness by 2 mm but decided against doing that. Instead going to try having two layers of spirals, the inner layer having 5 loops and outer with 2 loops. 
+
+* Checked index signals with the motor close to the edge and then 
+
+
+NKT Laser
+		off		20mW	delta_move_1	delta_move_2	delta_move_3 	delta_move_4
+CH1:	25645	24225					1000							450 -> 1300
+CH2:	25695	34525	150								1600 -> 550		   
+
+
+********************* 2025.02.27 *********************
+
+DFB laser
+CH1:
+0 extra loops:
+off		on		delta_move
+25660	24830	50
+
+NKT Laser
+		off		20mW	(old)delta_move_1	delta_move_2	(old)delta_move_3 	delta_move_4
+CH1:	25645	24225						380									450
+CH2:	25695	34525	(50)270								(300)1600    
 
 ********************* 2025.02.26 *********************
 

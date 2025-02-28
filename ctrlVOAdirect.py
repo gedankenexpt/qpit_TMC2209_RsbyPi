@@ -48,13 +48,19 @@ def make_steps_and_read(step_pin, num_steps, pin_ind_list, fpath=''):
     """
     on_time = 80 * 1e-6
     off_time = 80 * 1e-6
-    sig_index = np.zeros((num_steps, len(pin_ind_list)), dtype=int)
+    pause_time = 50 * 1e-6
+    sig_index = np.zeros((2 * num_steps, len(pin_ind_list)), dtype=int)
     sig_index[:] = -1
     for j in range(num_steps):
         GPIO.output(step_pin, GPIO.HIGH)
         time.sleep(on_time)
         GPIO.output(step_pin, GPIO.LOW)
         time.sleep(off_time)
+        for ix, pin in enumerate(pin_ind_list):
+            sig_index[j, ix] = GPIO.input(pin)
+
+    for j in range(num_steps, 2 * num_steps):
+        time.sleep(pause_time)
         for ix, pin in enumerate(pin_ind_list):
             sig_index[j, ix] = GPIO.input(pin)
 
@@ -66,24 +72,49 @@ def make_steps_and_read(step_pin, num_steps, pin_ind_list, fpath=''):
         print("Index signal output will not be dumped into file")
 
 
-def plot_INDpin_values(ni, datadir, pin_ind_list):
+def plot_INDpin_values(data_src, pin_ind_list, ni=0):
+    if len(os.path.split(data_src)[0]) > 0:
+        data_src_is_file = False
+        fig, ax = plt.subplots(nrows=ni, ncols=1, figsize=(10, 6))
+    else:
+        ni = 1  # force exactly one iteration
+        data_src_is_file = True
+        fig, ax = plt.subplots(figsize=(10, 6))
+
     # fig, ax = plt.subplots(figsize=(10, 6))
-    fig, ax = plt.subplots(nrows=ni, ncols=1, figsize=(10, 6))
+
     for i in range(ni):
         print(f'Plotting from iteration {i + 1} of {ni}')
-        fpath_csv1 = os.path.join(datadir, 'CW' + str(i + 1) + '.csv')
-        fpath_csv2 = os.path.join(datadir, 'CCW' + str(i + 1) + '.csv')
-        df1 = pd.read_csv(fpath_csv1)
-        df2 = pd.read_csv(fpath_csv2)
+        if data_src_is_file:
+            df = pd.read_csv(data_src)
+        else:
+            fpath_csv1 = os.path.join(data_src, 'CW' + str(i + 1) + '.csv')
+            fpath_csv2 = os.path.join(data_src, 'CCW' + str(i + 1) + '.csv')
+            df1 = pd.read_csv(fpath_csv1)
+            df2 = pd.read_csv(fpath_csv2)
+
         for ix, pin in enumerate(pin_ind_list):
-            ax[i].plot(np.concatenate((df1[pin], df2[pin])),
-                       label='IND' + str(ix + 1) + '(GPIO ' + pin + ')_run' + str(i + 1))
-            # ax[i].plot(df1[pin] + 1, label='CW' + pin + '(upper)')
-            # col = ax[i].get_lines()[-1].get_color()
-            # ax[i].plot(df2[pin] - 1, col, label='CCW' + pin + '(lower)')
-        ax[i].legend(fontsize=12)
-        ax[i].set_yticks([0, 1])
-    ax[0].set_title(f'Data from {os.path.split(datadir)[1]}')
+            offset = ix * 0.01
+            if data_src_is_file:
+                ax.plot(offset + df[pin],
+                           label='IND' + str(ix + 1) + '(GPIO ' + pin)
+                ax.legend(fontsize=12)
+                ax.set_yticks([0, 1])
+                ax.set_ylim([0, 1.1])
+            else:
+                ax[i].plot(offset + np.concatenate((df1[pin], df2[pin])),
+                           label='IND' + str(ix + 1) + '(GPIO ' + pin + ')_run' + str(i + 1))
+                ax[i].legend(fontsize=12)
+                ax[i].set_yticks([0, 1])
+                ax[i].set_ylim([0, 1.1])
+                # ax[i].plot(df1[pin] + 1, label='CW' + pin + '(upper)')
+                # col = ax[i].get_lines()[-1].get_color()
+                # ax[i].plot(df2[pin] - 1, col, label='CCW' + pin + '(lower)')
+
+    if data_src_is_file:
+        ax.set_title(f'Data from {data_src}')
+    else:
+        ax[0].set_title(f'Data from {os.path.split(data_src)[1]}')
 
     return fig, ax
 
@@ -117,8 +148,8 @@ def run_motor_direct(step_pin, dir_pin, en_pin, index_pins, voa_id, lin_range=0)
         else:
             os.mkdir(datadir)
             print(f'Directory created')
-        fixed_loop_steps = 1000
-        ni = 3
+        fixed_loop_steps = 40000
+        ni = 6
         for i in range(ni):
             print(f'Iteration {i + 1} of {ni} starting...')
             GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
