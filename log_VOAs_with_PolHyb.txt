@@ -1,5 +1,6 @@
 
 ********************* 2025.02.28 *********************
+* Possibly adding tapes at the end of the major axes of the elliptical shapes might give a larger range 
 
 * Discussed the possibility of increasing the elliptical disks' thickness by 2 mm but decided against doing that. Instead going to try having two layers of spirals, the inner layer having 5 loops and outer with 2 loops. 
 
