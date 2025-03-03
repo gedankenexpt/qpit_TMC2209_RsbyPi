@@ -4,7 +4,7 @@ import os
 import numpy as np
 import configparser
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 # required to do in the beginning to ensure the motors are not drawing too much current
@@ -148,8 +148,8 @@ def run_motor_direct(step_pin, dir_pin, en_pin, index_pins, voa_id, lin_range=0)
         else:
             os.mkdir(datadir)
             print(f'Directory created')
-        fixed_loop_steps = 40000
-        ni = 6
+        fixed_loop_steps = 30000
+        ni = 3
         for i in range(ni):
             print(f'Iteration {i + 1} of {ni} starting...')
             GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
@@ -202,6 +202,7 @@ if __name__ == "__main__":
     time.sleep(1)
 
     pin_en = int(list_enable_pins[chosen_voa_ix])  # GPIO pin for the chosen one!
+    print(f'Setting GPIO pin {pin_en} to be the enable pin')
     pin_step = int(cfg['common']['step'])
     pin_dir = int(cfg['common']['direction'])
     print(f'Setting STEP and DIR pins to be output')
