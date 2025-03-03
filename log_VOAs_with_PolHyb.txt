@@ -1,5 +1,13 @@
 
 ********************* 2025.03.03 *********************
+Changed scripts to incorporate setting no. of ramps as well as range in the config now. 
+
+		0 mW	20 mW
+CH1:	25645	23650	
+CH2:	25695	32100	
+
+* TO CHECK: Range for VOA2 seems constricted !
+
 
 Hybrid output numbers now determine the VOA ids as well 
 

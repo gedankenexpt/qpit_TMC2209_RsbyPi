@@ -4,7 +4,7 @@ import os
 import numpy as np
 import configparser
 import pandas as pd
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 
 # required to do in the beginning to ensure the motors are not drawing too much current
@@ -140,36 +140,9 @@ def shutdown():
     GPIO.cleanup()
 
 
-def run_motor_direct(step_pin, dir_pin, en_pin, index_pins, voa_id, lin_range=0):
-    datadir = 'ind-sig_voa=' + voa_id + '_steps=' + str(lin_range)
-    if lin_range == 0:
-        if os.path.exists(datadir):
-            print(f'Path exists, doing nothing')
-        else:
-            os.mkdir(datadir)
-            print(f'Directory created')
-        fixed_loop_steps = 30000
-        ni = 3
-        for i in range(ni):
-            print(f'Iteration {i + 1} of {ni} starting...')
-            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
-            GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.HIGH)  # set dir pin high
-            # make_steps(step_pin, fixed_loop_steps)  # make steps
-            fpath_csv = os.path.join(datadir, 'CW' + str(i + 1) + '.csv')
-            make_steps_and_read(step_pin, fixed_loop_steps, index_pins, fpath_csv)  # make steps and read index signal
-            print(f'Setting enable pin to low, waiting for 2 sec, and changing direction')
-            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.LOW)  # set enable pin low
-            time.sleep(0.5)
-            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
-            GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.LOW)  # set dir pin high
-            # make_steps(step_pin, fixed_loop_steps)  # make steps again (in opposite direction)
-            fpath_csv = os.path.join(datadir, 'CCW' + str(i + 1) + '.csv')
-            make_steps_and_read(step_pin, fixed_loop_steps, index_pins,
-                                fpath_csv)  # make steps (in opposite direction) and read index signal
-            print(f'Iteration {i + 1} of {ni} finished; setting enable pin low')
-            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.LOW)  # set enable pin low
-            time.sleep(1.2)
-    else:
+def run_motor_direct(step_pin, dir_pin, en_pin, index_pins, voa_id, lin_range, num_loops=0):
+    fpath_data = 'ind-sig_voa=' + voa_id + '_steps=' + str(lin_range)
+    if num_loops == 0:
         GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
         print(f'Moving by {lin_range} steps')
         if lin_range > 0:
@@ -179,10 +152,36 @@ def run_motor_direct(step_pin, dir_pin, en_pin, index_pins, voa_id, lin_range=0)
             print(f'Going the -ve way')
             GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.LOW)  # set dir pin low
         time.sleep(0.1)
-        fpath_csv = datadir + '.csv'  # just the single file
+        fpath_csv = fpath_data + '.csv'  # just the single file
         make_steps_and_read(step_pin, int(abs(lin_range)), index_pins, fpath_csv)  # make steps and read index signal
-        print(f'Setting enable pin to low, waiting for 1 sec')
+        print(f'Setting enable pin to low')
         GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.LOW)  # set enable pi low
+    else:
+        # ramping back and forth
+        if os.path.exists(fpath_data):
+            print(f'Path exists, doing nothing')
+        else:
+            os.mkdir(fpath_data)
+            print(f'Directory created')
+        for i in range(num_loops):
+            print(f'Iteration {i + 1} of {num_loops} starting...')
+            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
+            GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.HIGH)  # set dir pin high
+            # make_steps(step_pin, fixed_loop_steps)  # make steps
+            fpath_csv = os.path.join(fpath_data, 'CW' + str(i + 1) + '.csv')
+            make_steps_and_read(step_pin, lin_range, index_pins, fpath_csv)  # make steps and read index signal
+            print(f'Setting enable pin to low, waiting for 0.5 sec, and changing direction')
+            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.LOW)  # set enable pin low
+            time.sleep(0.5)
+            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.HIGH)  # set enable pin high
+            GPIO.setup(dir_pin, GPIO.OUT, initial=GPIO.LOW)  # set dir pin high
+            # make_steps(step_pin, fixed_loop_steps)  # make steps again (in opposite direction)
+            fpath_csv = os.path.join(fpath_data, 'CCW' + str(i + 1) + '.csv')
+            make_steps_and_read(step_pin, lin_range, index_pins,
+                                fpath_csv)  # make steps (in opposite direction) and read index signal
+            print(f'Iteration {i + 1} of {num_loops} finished; setting enable pin low')
+            GPIO.setup(en_pin, GPIO.OUT, initial=GPIO.LOW)  # set enable pin low
+            time.sleep(0.5)
 
 
 if __name__ == "__main__":
@@ -208,14 +207,18 @@ if __name__ == "__main__":
     print(f'Setting STEP and DIR pins to be output')
     make_stepNdir_output(pin_step, pin_dir)
 
-    try:
-        steps_to_move = int(cfg['movement']['num_steps'])
-    except ValueError:
-        print(f'Configured number of steps should be an integer')
-        steps_to_move = 0
+    num_ramps = int(cfg['movement']['num_loops'])
+    if num_ramps > 0:
+        steps_to_move = int(cfg['movement']['range_in_loops'])
+        if steps_to_move <= 0:
+            print('WARNING: No. of steps needs to be positive. Setting to fixed value')
+            steps_to_move = 5000
+    else:
+        steps_to_move = int(cfg['movement']['range_single'])
+        num_ramps = 0
 
     try:
-        run_motor_direct(pin_step, pin_dir, pin_en, ind_pins_all, cfg['voa']['id'], steps_to_move)
+        run_motor_direct(pin_step, pin_dir, pin_en, ind_pins_all, cfg['voa']['id'], steps_to_move, num_ramps)
     except:
         print(f'Encountered some error. Closing down.')
     finally:
