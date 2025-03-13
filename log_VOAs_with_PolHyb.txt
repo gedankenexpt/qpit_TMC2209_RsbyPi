@@ -1,5 +1,18 @@
+Raspberry Pi new password:  
+Ljhvc235uyhhh1YYYYY1
+
+********************* 2025.03.06 *********************
+
+		0 mW	20 mW
+CH1:	25665	22350	
+CH2:	25720	27750	
+
+
 
 ********************* 2025.03.03 *********************
+
+Assuming after reducing the diameter to 	
+
 Changed scripts to incorporate setting no. of ramps as well as range in the config now. 
 
 		0 mW	20 mW
@@ -12,12 +25,12 @@ CH2:	25695	32100
 Hybrid output numbers now determine the VOA ids as well 
 
 ------------------------------------------------------
-VOA      GPIO   enable   pin_Rpi
+VOA      GPIO   enable   pin_Rpi   PD polarity
 ------------------------------------------------------
- 1        4       EN1      7
- 2        22      EN2     15
- 3        0       EN3     27
- 4        1       EN4     28
+ 1        4       EN1      7        -ve
+ 2        22      EN2     15        -ve
+ 3        0       EN3     27        +ve
+ 4        1       EN4     28        +ve
 ------------------------------------------------------
 
 
@@ -51,8 +64,6 @@ CH2:	25695	34525	(50)270								(300)1600
 
 ********************* 2025.02.26 *********************
 
-Raspberry Pi new password:  
-Ljhvc235uyhhh1YYYYY1
 
 Aleksander re-did the circuit board and the index signals on the scope look much better. He believes there might be still some noise during the transition in the pulses but this should hopefully be addressable in software. 
 
